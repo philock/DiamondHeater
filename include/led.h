@@ -22,6 +22,7 @@ class LED{
 
         void poll();
 
+        bool _ledOn;
     private:
         LEDStates _state = OFF;
 
@@ -29,7 +30,6 @@ class LED{
         void stateErr();
 
         int _pin;
-        bool _ledOn;
         unsigned long _intervalEnd;
 
         const bool* _morsePattern;
