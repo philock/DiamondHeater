@@ -8,11 +8,15 @@
 #define R_NOMINAL 1000.0   // 'Nominal' 0 °C resistance of the RTD sensor
 #define V_REF     3.81     // DAC reference voltage
 
+// System parameters
+#define PERIOD_CONTROLLER 100 // Period at which system PID gets updated in milliseconds
+#define PERIOD_INTERFACE  250 // Period at which communication with host system is handled in milliseconds
+
 // Maximum values
 #define I_MAX 5 // Maximum output current (A)
 #define T_MAX 200 // Maximum temperature (°C)
 
-// Control loop PID parameters
+// Control loop default PID parameters
 #define PIDKp 1.0
 #define PIDKi 1.0
 #define PIDKd 1.0
