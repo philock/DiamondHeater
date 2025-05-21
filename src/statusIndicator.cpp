@@ -45,7 +45,7 @@ void StatusIndicator::reset(){
 }
 
 void StatusIndicator::update(){
-    ledActive.poll();
+    ledActive.poll(); // For LED blinking
 }
 
 int StatusIndicator::getStatusWord(){

@@ -3,8 +3,8 @@ enum MSG : char{
     RESET, // Reset Microcontroller (flag)
     START, // Start system (temperature control). Returns Ack/Nack
     STOP,  // Stop system (temperature control). Returns Ack/Nack
-    ACK,   // Acknowledge transmission (flag)
-    NACK,  // Not acknowledge transmission (flag)
+    ACK,   // Acknowledge transmission (flag), transmitted before a flag for the corresponding message
+    NACK,  // Not acknowledge transmission (flag), transmitted before a flag for the corresponding message
 
     // Temperature and Current values (float)
     T_SETPOINT, // Set new setpoint temperature. Returns Ack/Nack

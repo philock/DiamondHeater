@@ -2,7 +2,7 @@
 
 TemperatureController::TemperatureController():
     thermo(PIN_CS, &SPI),
-    pid(PIDKp, PIDKi, PIDKd, PID::Direction::Direct),
+    pid(PIDKp, PIDKi, PIDKd, PID::Direction::Direct, PID::P_On::Measurement),
     indicator(){
 
     initADCDAC();
@@ -12,12 +12,20 @@ TemperatureController::TemperatureController():
     thermo.enable50Hz(true);
 
     // Initialize PID
-    pid.SetOutputLimits(0, I_MAX);    // Output between 0 and 5 amps
+    pid.SetOutputLimits(0, I_MAX);    // Output between 0 and I_max amps
     pid.SetTunings(PIDKp, PIDKi, PIDKd);
+    pid.SetSampleTime(PERIOD_CONTROLLER);
+    pid.SetMode(PID::Mode::Manual);   // Controller not active yet (stop state)
     pid.SetSampleTime(PERIOD_CONTROLLER);
     pid.Start(_temperature,           // input
               0,                      // output
               _setpoint);             // setpoint
+
+    // No output
+    setCurrent(0.0);
+
+    // Blink "Active" LED
+    indicator.setActiveBlink();
 }
 
 void TemperatureController::initADCDAC(){
@@ -50,25 +58,39 @@ void TemperatureController::setKd(float Kd){
 bool TemperatureController::setpoint(float T){
     if(T < 0 || T > T_MAX) return false;
     pid.Setpoint(T);
+
+    //setCurrent(pid.GetKp()); // For testing
+
     return true;
 }
 
 bool TemperatureController::setCurrent(float I){
-    if(I < 0 || I > I_MAX) return false;
+    if(I < -0.0001 || I > I_MAX) return false;
 
     float U = I_GAIN*R_SENSE*I;
     dac.setVoltage(U);
     return true;
 }
 
+float TemperatureController::getCurrent(){
+    return _current;
+}
+
+float TemperatureController::getTemperature(){
+    return _temperature;
+}
+
 void TemperatureController::readCurrentTemperature(){
+    // Read temperature
     _temperature = thermo.temperature(R_NOMINAL, R_REF);
 
+    // Start current reading
     if (!adc->adc0->isComplete()) {
         adc->adc0->startSingleRead(PIN_ADC);
         return;
     }
     
+    // Read current result
     constexpr float convFactor = (3.3 / (4095 * I_GAIN * R_SENSE));
     int val = adc->adc0->analogRead(PIN_ADC);
     _current = val * convFactor;
@@ -76,7 +98,7 @@ void TemperatureController::readCurrentTemperature(){
 
 void TemperatureController::protection(){
     // Over-current protection
-    if(_current > I_MAX){
+    if(_current > I_OCP){
         indicator.setOverCurrent(true);
         error();
     }
@@ -122,33 +144,42 @@ void TemperatureController::updatePID(){
 }
 
 void TemperatureController::update(){
+    indicator.update(); // For blinking LEDs
     readCurrentTemperature();
 
-    if(_state == CtrlStates::START){       
-        protection();
+    if(_state == CtrlStates::CTRL_START){       
         updatePID();
+        protection();
     }
 }
 
 bool TemperatureController::start(){
+    if(_state != CtrlStates::CTRL_STOP) return false;
+
     // Trun on PID
     pid.SetMode(PID::Mode::Automatic);
 
     // Blink "Active" led
-    indicator.setActiveBlink();
+    indicator.setActive(true);
 
-    _state = CtrlStates::START;
+    _state = CtrlStates::CTRL_START;
+
+    return true;
 }
 
 bool TemperatureController::stop(){
+    if(_state == CtrlStates::CTRL_STOP) return false;
+
     // Trun off PID and set output to zero
     pid.SetMode(PID::Mode::Manual);
     setCurrent(0.0);
 
     // "Active" LED on constant
-    indicator.setActive(true);
+    indicator.setActiveBlink();
 
-    _state = CtrlStates::STOP;
+    _state = CtrlStates::CTRL_STOP;
+
+    return true;
 }
 
 void TemperatureController::error(){
@@ -159,7 +190,7 @@ void TemperatureController::error(){
     // "Active" LED off
     indicator.setActive(false);
 
-    _state = CtrlStates::ERROR;
+    _state = CtrlStates::CTRL_ERROR;
 }
 
 void TemperatureController::reset(){

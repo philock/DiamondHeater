@@ -9,9 +9,9 @@
 
 // State-definition for temperature controller finite state machine
 enum CtrlStates{
-    START,
-    STOP,
-    ERROR
+    CTRL_START,
+    CTRL_STOP,
+    CTRL_ERROR
 };
 
 class TemperatureController{
@@ -26,7 +26,7 @@ class TemperatureController{
         float _temperature =0;
 
         // State machine state
-        CtrlStates _state = CtrlStates::STOP;
+        CtrlStates _state = CtrlStates::CTRL_STOP;
         
         // set current output (writes DAC)
         bool setCurrent(float I);

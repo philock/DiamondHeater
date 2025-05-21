@@ -10,11 +10,13 @@ class Interface{
         TemperatureController* controller;
         StatusIndicator* indicator;
 
-        inline void ack(){comm.addFlagToken(MSG::ACK);};
-        inline void nack(){comm.addFlagToken(MSG::NACK);};
+        inline void ack(MSG msgToAck){comm.addFlagToken(MSG::ACK);comm.addFlagToken(msgToAck);}
+        inline void nack(MSG msgToNAck){comm.addFlagToken(MSG::NACK);comm.addFlagToken(msgToNAck);}
 
     public:
-        Interface(TemperatureController* controller, StatusIndicator* indicator);
+        Interface(TemperatureController* controller);
+
+        bool isConnected();
 
         // Receives and processes messages, sends updates back to host
         void update();

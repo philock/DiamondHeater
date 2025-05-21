@@ -1,12 +1,23 @@
 #include <interface.h>
 
-Interface::Interface(TemperatureController* controller_p, StatusIndicator* indicator_p) :
+Interface::Interface(TemperatureController* controller_p) :
     comm(115200){
     controller = controller_p;
-    indicator = indicator_p;
+    indicator = &(controller_p->indicator);
+    Serial.clear();
+}
+
+bool Interface::isConnected(){
+    if (!bitRead(USB1_PORTSC1,7)) return true;
+    else return false;
 }
 
 void Interface::update(){
+    if(!isConnected()){
+        controller->stop();
+        return;
+    }
+
     rx_message rxm = comm.getNextMsg();
     float payload;
 
@@ -27,13 +38,13 @@ void Interface::update(){
                 break;
             case MSG::T_SETPOINT:
                 comm.getPayload(payload);
-                (controller->setpoint(payload))? ack() : nack();
+                (controller->setpoint(payload))? ack(MSG::T_SETPOINT) : nack(MSG::T_SETPOINT);
                 break;
             case MSG::START:
-                (controller->start())? ack() : nack();
+                (controller->start())? ack(MSG::START) : nack(MSG::START);
                 break;
             case MSG::STOP:
-                (controller->stop())? ack() : nack();
+                (controller->stop())? ack(MSG::STOP) : nack(MSG::STOP);
                 break;
             case MSG::RESET:
                 controller->reset();
@@ -42,6 +53,8 @@ void Interface::update(){
             default:
                 break;
         }
+
+        rxm = comm.getNextMsg();
     }
     // Send acknowledgement flags
     comm.transmit();

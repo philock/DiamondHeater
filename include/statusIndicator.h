@@ -17,12 +17,12 @@ class StatusIndicator{
         StatusIndicator();
 
         // Set status indicator LEDs
-        void setFault(bool state) { state ? ledFault.on() : ledFault.off(); }
-        void setOverCurrent(bool state) { state ? ledOC.on() : ledOC.off(); }
+        void setFault(bool state)           { state ? ledFault.on() : ledFault.off(); }
+        void setOverCurrent(bool state)     { state ? ledOC.on() : ledOC.off(); }
         void setOverTemperature(bool state) { state ? ledOT.on() : ledOT.off(); }
-        void setActive(bool state) { state ? ledActive.blink() : ledActive.off(); }
-        void setActiveBlink(){ledActive.blink();}
-        void setPower(bool state) { state ? ledPower.on() : ledPower.off(); }
+        void setActive(bool state)          { state ? ledActive.on() : ledActive.off(); }
+        void setActiveBlink()               { ledActive.blink(); }
+        void setPower(bool state)           { state ? ledPower.on() : ledPower.off(); }
 
         // Turn off all status indicator LEDs
         void reset();
