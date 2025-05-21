@@ -9,6 +9,10 @@ Comm::Comm(int baud){
     txBufPos = 0;
 }
 
+bool Comm::dataAvailable(){
+    return Serial.available() != 0;
+}
+
 void Comm::transmit(){
     if(txBufPos > 0){
         // Terminate message

@@ -12,11 +12,21 @@ bool Interface::isConnected(){
     else return false;
 }
 
-void Interface::update(){
-    if(!isConnected()){
+void Interface::receive(){
+    // Detect physical disconnect of USB
+    if(!isConnected() && controller->isStarted()){
         controller->stop();
         return;
     }
+
+    // Watchdog triggered because of broken link to host, but controller still running. Turn off controller.
+    if(_comm_watchdog > COMM_WATCHDOG && controller->isStarted()){
+        controller->reset();
+        _comm_watchdog = 0;
+    }
+
+    // Nothing to receive, return
+    if(!comm.dataAvailable()) return;
 
     rx_message rxm = comm.getNextMsg();
     float payload;
@@ -49,6 +59,9 @@ void Interface::update(){
             case MSG::RESET:
                 controller->reset();
                 break;
+            case MSG::ACK:
+                _comm_watchdog = 0; // Reset watchdog
+                break;
 
             default:
                 break;
@@ -56,9 +69,12 @@ void Interface::update(){
 
         rxm = comm.getNextMsg();
     }
-    // Send acknowledgement flags
-    comm.transmit();
 
+    // Send acknowledgement flags
+    //comm.transmit();
+}
+
+void Interface::transmit(){
     // Transmit state of fault, OT, OC and active LEDs back to host
     int state = indicator->getStatusWord();
     comm.addVariableToken(state, MSG::STATUS);

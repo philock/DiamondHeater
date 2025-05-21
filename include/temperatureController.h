@@ -58,16 +58,16 @@ class TemperatureController{
         // Read actual current
         float getCurrent();
 
-
         // Set target temperature
         bool setpoint(float T);
 
-        
         // set PID loop gains
         void setKp(float Kp);
         void setKi(float Ki);
         void setKd(float Kd);
 
+        // Returns true when the controller is started and actively regulating temperature
+        bool isStarted();
 
         // ---State entry functions---
         // Start system, regulate temperature 

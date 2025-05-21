@@ -32,13 +32,16 @@ void setup(){
 }
 
 void loop(){
+    buttonReset.poll();
+    interface.receive();
+
     if(interfaceTick > PERIOD_INTERFACE){
-        interface.update();
+        interface.transmit(); // Transmit temperature, current and status LEDs
         interfaceTick = 0;
     }
 
     if(controllerTick > PERIOD_CONTROLLER){
-        controller.update();
+        controller.update(); // Read values and update PID control loop
         controllerTick = 0;
     }
 }

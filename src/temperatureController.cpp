@@ -80,6 +80,10 @@ float TemperatureController::getTemperature(){
     return _temperature;
 }
 
+bool TemperatureController::isStarted(){
+    return _state == CtrlStates::CTRL_START;
+}
+
 void TemperatureController::readCurrentTemperature(){
     // Read temperature
     _temperature = thermo.temperature(R_NOMINAL, R_REF);

@@ -22,6 +22,8 @@ class Comm{
     public:
         Comm(int baud);
 
+        bool dataAvailable();
+
         void transmit();
 
         template<typename T>

@@ -9,8 +9,9 @@
 #define V_REF     3.81     // DAC reference voltage
 
 // System parameters
-#define PERIOD_CONTROLLER 100 // Period at which system PID gets updated in milliseconds
-#define PERIOD_INTERFACE  250 // Period at which communication with host system is handled in milliseconds
+#define PERIOD_CONTROLLER 100  // Period at which system PID gets updated in milliseconds
+#define PERIOD_INTERFACE  250  // Period at which communication with host system is handled in milliseconds
+#define COMM_WATCHDOG     5000 // Host system acknowledges reception. If the controller does not receive this Ack over five seconds, it resets
 
 // Maximum values
 #define I_MAX 4   // Maximum output current (A)
