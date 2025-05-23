@@ -72,9 +72,12 @@ class TemperatureController{
         // ---State entry functions---
         // Start system, regulate temperature 
         bool start();
+
         // Stop system, no output
         bool stop();
-        // Resets controller to exit error state, into stop state: output and setpoint to zero, all indicator lights off.
+
+        // Resets controller to exit error state, into stop state: output to zero, all indicator lights off.
+        // Setpoint and PID values are kept
         void reset();
         
         // ---Main loop function (FSM)---
