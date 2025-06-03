@@ -62,6 +62,9 @@ void Interface::receive(){
             case MSG::ACK:
                 _comm_watchdog = 0; // Reset watchdog
                 break;
+            case MSG::CURRENT: // Overwrite output current by host. Only use for testing!
+                comm.getPayload(payload);
+                controller->setCurrent(payload);
 
             default:
                 break;
@@ -87,5 +90,10 @@ void Interface::transmit(){
     float I = controller->getCurrent();
     comm.addVariableToken(I, MSG::CURRENT);
 
+    comm.transmit();
+}
+
+void Interface::notify_reset(){
+    comm.addFlagToken(MSG::RESET);
     comm.transmit();
 }

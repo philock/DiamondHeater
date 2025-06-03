@@ -28,18 +28,16 @@ class TemperatureController{
         // State machine state
         CtrlStates _state = CtrlStates::CTRL_STOP;
         
-        // set current output (writes DAC)
-        bool setCurrent(float I);
-
+        
         // Initialize ADC and DAC settings
         void initADCDAC();
-
+        
         // Run over-current and over-temperature protection
         void protection();
-
+        
         // State entry function for error state
         void error();
-
+        
         // Reads current and temperature and sets private variables
         void readCurrentTemperature();
         
@@ -48,9 +46,12 @@ class TemperatureController{
         
     public:
         StatusIndicator indicator;
-
+    
         // Constructor
         TemperatureController();
+
+        // set current output (writes DAC). Only called from outside for testing!
+        bool setCurrent(float I);
         
         // Read actual temperature
         float getTemperature();

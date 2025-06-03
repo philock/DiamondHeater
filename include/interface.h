@@ -29,6 +29,9 @@ class Interface{
         // Transmit updates back to host, call at fixed interval
         void transmit();
 
+        // Notify host that reset button on PCB has been pressed
+        void notify_reset();
+
 
 
 };

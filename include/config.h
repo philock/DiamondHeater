@@ -6,7 +6,10 @@
 #define I_GAIN    26.45455 // Gain of the current feedback amplifier (1 + R1/R2)
 #define R_REF     4000.0   // Value of the Rref resistor. 4300.0 for PT1000
 #define R_NOMINAL 1000.0   // 'Nominal' 0 °C resistance of the RTD sensor
-#define V_REF     3.81     // DAC reference voltage
+#define V_REF     3.812    // DAC reference voltage
+#define OFFSET_COMP -0.01  // Added to current setpoint to compensate for offset
+#define GAIN_COMP 1.016    // Units amps/amp. Compensates gain error of analog circuit
+#define ADC_GAIN_COMP 0.980324245 // Units amps/amp
 
 // System parameters
 #define PERIOD_CONTROLLER 100  // Period at which system PID gets updated in milliseconds
@@ -14,8 +17,8 @@
 #define COMM_WATCHDOG     5000 // Host system acknowledges reception. If the controller does not receive this Ack over five seconds, it resets
 
 // Maximum values
-#define I_MAX 4   // Maximum output current (A)
-#define I_OCP 4.2 // Current at which over-current protection activates (A)
+#define I_MAX 4.6 // Maximum output current (A)
+#define I_OCP 4.8 // Current at which over-current protection activates (A)
 #define T_MAX 200 // Maximum temperature (°C)
 
 // Control loop default PID parameters

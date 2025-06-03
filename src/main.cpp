@@ -13,6 +13,7 @@ elapsedMillis controllerTick;
 // Soft-resets system to power-up state, erasing all errors
 void resetSystem(){
     controller.reset();
+    interface.notify_reset();
 
     // Microcontroller hard-reset
     //USB1_USBCMD = 0; // disconnect USB

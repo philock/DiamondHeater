@@ -15,11 +15,11 @@ TemperatureController::TemperatureController():
     pid.SetOutputLimits(0, I_MAX);    // Output between 0 and I_max amps
     pid.SetTunings(PIDKp, PIDKi, PIDKd);
     pid.SetSampleTime(PERIOD_CONTROLLER);
+    pid.Setpoint(0.0);
     pid.SetMode(PID::Mode::Manual);   // Controller not active yet (stop state)
-    pid.SetSampleTime(PERIOD_CONTROLLER);
-    pid.Start(_temperature,           // input
+    /* pid.Start(_temperature,           // input
               0,                      // output
-              _setpoint);             // setpoint
+              _setpoint);             // setpoint */
 
     // No output
     setCurrent(0.0);
@@ -29,6 +29,8 @@ TemperatureController::TemperatureController():
 }
 
 void TemperatureController::initADCDAC(){
+    pinMode(PIN_ADC, INPUT_DISABLE); // Disable input schmitt trigger to avoid jump at half-scale
+
     // ADC configuration for high accuracy
     adc->adc0->setResolution(12);
     adc->adc0->setAveraging(32);
@@ -57,9 +59,9 @@ void TemperatureController::setKd(float Kd){
 
 bool TemperatureController::setpoint(float T){
     if(T < 0 || T > T_MAX) return false;
-    pid.Setpoint(T);
+    _setpoint = T;
 
-    //setCurrent(pid.GetKp()); // For testing
+    if(_state == CtrlStates::CTRL_START) pid.Setpoint(T);
 
     return true;
 }
@@ -67,7 +69,8 @@ bool TemperatureController::setpoint(float T){
 bool TemperatureController::setCurrent(float I){
     if(I < -0.0001 || I > I_MAX) return false;
 
-    float U = I_GAIN*R_SENSE*I;
+    float I_comp = (I + OFFSET_COMP)*GAIN_COMP;
+    float U = I_GAIN*R_SENSE*I_comp;
     dac.setVoltage(U);
     return true;
 }
@@ -95,7 +98,8 @@ void TemperatureController::readCurrentTemperature(){
     }
     
     // Read current result
-    constexpr float convFactor = (3.3 / (4095 * I_GAIN * R_SENSE));
+    constexpr float convFactor = ADC_GAIN_COMP*(3.3 / (4095 * I_GAIN * R_SENSE)); // 12 Bit
+    //constexpr float convFactor = ADC_GAIN_COMP*(3.3 / (1023 * I_GAIN * R_SENSE)); // 10 Bit
     int val = adc->adc0->analogRead(PIN_ADC);
     _current = val * convFactor;
 }
@@ -103,14 +107,14 @@ void TemperatureController::readCurrentTemperature(){
 void TemperatureController::protection(){
     // Over-current protection
     if(_current > I_OCP){
-        indicator.setOverCurrent(true);
         error();
+        indicator.setOverCurrent(true);
     }
 
     // Over-temperature protection
     if(_temperature > T_MAX){
-        indicator.setOverTemperature(true);
         error();
+        indicator.setOverTemperature(true);
     }
 
     // Thermometer errors
@@ -143,7 +147,7 @@ void TemperatureController::protection(){
 }
 
 void TemperatureController::updatePID(){
-    float current_output = pid.Run(_temperature);
+    float current_output = pid.Run(_temperature); // returns 0 when PID in manual mode
     setCurrent(current_output);
 }
 
@@ -151,19 +155,18 @@ void TemperatureController::update(){
     indicator.update(); // For blinking LEDs
     readCurrentTemperature();
 
-    if(_state == CtrlStates::CTRL_START){       
-        updatePID();
-        protection();
-    }
+    if(_state == CtrlStates::CTRL_START) updatePID();    
+
+    protection();
 }
 
 bool TemperatureController::start(){
-    if(_state != CtrlStates::CTRL_STOP) return false;
+    if(_state == CtrlStates::CTRL_ERROR) return false;
 
     // Trun on PID
-    pid.SetMode(PID::Mode::Automatic);
+    pid.Start(_temperature, 0.0, _setpoint);
 
-    // Blink "Active" led
+    // Turn on "Active" led
     indicator.setActive(true);
 
     _state = CtrlStates::CTRL_START;
@@ -178,7 +181,7 @@ bool TemperatureController::stop(){
     pid.SetMode(PID::Mode::Manual);
     setCurrent(0.0);
 
-    // "Active" LED on constant
+    // Blink "Active" LED
     indicator.setActiveBlink();
 
     _state = CtrlStates::CTRL_STOP;
@@ -187,6 +190,8 @@ bool TemperatureController::stop(){
 }
 
 void TemperatureController::error(){
+    if(_state == CtrlStates::CTRL_ERROR) return;
+
     // Trun off PID and set output to zero
     pid.SetMode(PID::Mode::Manual);
     setCurrent(0.0);
