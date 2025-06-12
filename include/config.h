@@ -22,9 +22,9 @@
 #define T_MAX 200 // Maximum temperature (°C)
 
 // Control loop default PID parameters
-#define PIDKp 0.1
-#define PIDKi 0.1
-#define PIDKd 0.1
+#define PIDKp 0.045
+#define PIDKi 0.01
+#define PIDKd 0.0
 
 // Pin definitions
 #define PIN_FAULT   4

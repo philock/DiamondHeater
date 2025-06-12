@@ -36,13 +36,25 @@ void loop(){
     buttonReset.poll();
     interface.receive();
 
+    // Handle connection to host every 250 milliseconds
     if(interfaceTick > PERIOD_INTERFACE){
         interface.transmit(); // Transmit temperature, current and status LEDs
         interfaceTick = 0;
     }
 
+    // Check for brownout on internal LDO. Ideally, this would be an interrupt
+    if(PMU_REG_1P1 & PMU_REG_1P1_BO_VDD1P1){
+        controller.setCurrent(0.0);
+    }
+    
+    // Update controller every 100 milliseconds
     if(controllerTick > PERIOD_CONTROLLER){
         controller.update(); // Read values and update PID control loop
         controllerTick = 0;
+    }
+
+    // Check for brownout on internal LDO. Ideally, this would be an interrupt
+    if(PMU_REG_1P1 & PMU_REG_1P1_BO_VDD1P1){
+        controller.setCurrent(0.0);
     }
 }
